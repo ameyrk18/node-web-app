@@ -1,0 +1,24 @@
+def repo = "node-web-app"
+def repo_url = "https://github.com/ameyrk18/${repo}.git"
+
+pipeline {
+    agent any
+    stages {
+        stage('Stage 1') {
+            steps {
+                echo 'Hello world!'
+            }
+        }
+        stage('Stage 2') {
+            steps {
+                echo 'You are here now!'
+            }
+        }
+        stage('Checkout') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '11bf638d-54b0-45d3-829a-476f06d606ff', url: repo_url ]]])
+            }
+        }
+
+    }
+}
