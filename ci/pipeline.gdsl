@@ -3,6 +3,13 @@ def repo_url = "https://github.com/ameyrk18/${repo}.git"
 
 pipeline {
     agent any
+    environment {
+        IMAGE_NAME = 'node-web-app'
+        IMAGE_NAME_FULL = 'registry.hub.docker.com/ameyrk//node-web-app'
+        DOCKERFILE_PATH = './'
+        IMAGE_REGISTRY = 'registry.hub.docker.com'
+        SLACK_CHANNEL = 'web-app-team'
+    }
     stages {
         stage('Stage 1') {
             steps {
@@ -19,6 +26,18 @@ pipeline {
                 checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '11bf638d-54b0-45d3-829a-476f06d606ff', url: repo_url ]]])
             }
         }
+        stage('Build') {
+            steps {
+                script {
+                    def IMAGE_TAG_EXPRESSION = "${BUILD_NUMBER}"
+                    docker.withRegistry("https://${IMAGE_REGISTRY}", 'docker-hub-cred') {
+                        def image = docker.build("${IMAGE_NAME_FULL}", "${DOCKERFILE_PATH}")
+                        image.push("${IMAGE_TAG_EXPRESSION}")
+                        image.push("latest")
 
+                    }
+                }
+            }
+        }
     }
 }
