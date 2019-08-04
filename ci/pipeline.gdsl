@@ -5,28 +5,71 @@ pipeline {
     agent any
     environment {
         IMAGE_NAME = 'node-web-app'
-        IMAGE_NAME_FULL = 'registry.hub.docker.com/ameyrk//node-web-app'
+        IMAGE_NAME_FULL = 'registry.hub.docker.com/ameyrk/node-web-app'
         DOCKERFILE_PATH = './'
         IMAGE_REGISTRY = 'registry.hub.docker.com'
         SLACK_CHANNEL = 'web-app-team'
     }
     stages {
-        stage('Stage 1') {
-            steps {
-                echo 'Hello world!'
-            }
-        }
-        stage('Stage 2') {
-            steps {
-                echo 'You are here now!'
-            }
-        }
         stage('Checkout') {
             steps {
                 checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '11bf638d-54b0-45d3-829a-476f06d606ff', url: repo_url ]]])
             }
         }
-        stage('Build') {
+        stage('Unit testing pre-requisites'){
+
+            sh 'npm prune' // remove old packages
+            sh 'npm install' // install packages
+            sh 'npm install -g pm2@latest' // install pm2 to start the node js app
+            sh 'pm2 start server.js' // start application
+        }
+
+        stage('Unit testing'){
+            sh 'mocha' // run tests
+            if (result != 0) {
+                echo '[FAILURE] Failed to build'
+                currentBuild.result = 'FAILURE'
+                sh "exit ${result}"
+            }
+            sh 'pm2 stop server'
+        }
+
+        stage("Dependency Check") {
+            steps {
+                dependencyCheckAnalyzer(
+                        datadir: 'dependency-check-data',
+                        suppressionFile: '',
+                        hintsFile: '',
+                        includeCsvReports: false,
+                        includeHtmlReports: true,
+                        includeJsonReports: true,
+                        isAutoupdateDisabled: false,
+                        outdir: '',
+                        scanpath: '',
+                        skipOnScmChange: false,
+                        skipOnUpstreamChange: false,
+                        zipExtensions: '',
+                        includeVulnReports: true)
+
+                dependencyCheckPublisher(
+                        canComputeNew: false,
+                        defaultEncoding: '',
+                        failedTotalAll: '2', // fail if greater than 3 vulns
+                        failedTotalHigh: '0', // fail if any high vulns
+                        healthy: '',
+                        pattern: '',
+                        unHealthy: '2' //build is unhealthy while there are more than 2 vulns
+                )
+
+                archiveArtifacts(
+                        allowEmptyArchive: true,
+                        artifacts: '**/dependency-check-report.*',
+                        onlyIfSuccessful: true)
+            }
+        }
+    }
+
+        stage('Build & Push') {
             steps {
                 script {
                     def IMAGE_TAG_EXPRESSION = "${BUILD_NUMBER}"
@@ -40,4 +83,3 @@ pipeline {
             }
         }
     }
-}
