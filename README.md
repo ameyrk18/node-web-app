@@ -32,5 +32,5 @@ To execute the unit test locally
 
 # Build image locally 
 
-docker build -t <image-name>:<version> .
+``docker build -t <image-name>:<version> .``
   
