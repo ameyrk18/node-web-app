@@ -24,7 +24,7 @@ pipeline {
             sh 'pm2 start server.js' // start application
         }
 
-        stage('Unit testing'){
+        stage('Start unit testing'){
             sh 'mocha' // run tests
             if (result != 0) {
                 echo '[FAILURE] Failed to build'
@@ -34,7 +34,7 @@ pipeline {
             sh 'pm2 stop server'
         }
 
-        stage("Dependency Check") {
+        stage('Start security audit checks') {
             steps {
                 dependencyCheckAnalyzer(
                         datadir: 'dependency-check-data',
