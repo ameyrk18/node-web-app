@@ -21,14 +21,13 @@ To execute the unit test locally
 1. Install npm by running brew install npm (for windows and other OS documentation yet to come)
 
 2. Start your unit testing by executing the below commands
-
     
-    npm prune # remove old packages if any
+``    npm prune # remove old packages if any
     npm install # install packages
     npm install -g pm2@latest # install process manager to start/stop node app
     pm2 start server.js # start your app
     mocha # run unit tests
-    pm2 stop server.js # stop your app
+    pm2 stop server.js # stop your app``
 
 # Build image locally 
 
