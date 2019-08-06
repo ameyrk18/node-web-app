@@ -2,7 +2,7 @@
 
 # Pipeline dependency check & purpose
 
-Thi is a simple hello world node.js code base. Code base consists hello world application, unit test cases and a jenkins pipeline.  The jenkins pipeline will checkout the code base, do some unit testing pre-requisites,start unit testing, scan the code base for security issues and finally build and push image to docker private hub. The image will be built and published to docker hub only if unit testing and scan the code base for security results are positive. 
+Thi is a simple hello world node.js code base. Code base consists hello world application, unit test cases and a jenkins pipeline.  The jenkins pipeline will checkout the code base, do some unit testing pre-requisites,start unit testing, scan the code base for security vulnerabilities and finally build and push image to docker private hub. The image will be built and published to docker hub only if unit testing and scan the code base for security results are positive. 
 
 I am using mocha for unit testing and snyk for security scanning.  
 
@@ -37,7 +37,7 @@ To execute the unit test locally
 
 ``    snyk auth # authethicate with snyk ``
 
-``    snyk test # execute scanning``
+``    snyk test # execute scanning of vulnerabilities``
 
 ``    pm2 stop server.js # stop your app``
 
