@@ -23,7 +23,7 @@ To execute the unit test locally
 
 1. Install npm by running brew install npm (for windows and other OS documentation yet to come)
 
-2. Start your unit testing by executing the below commands
+2. Start your unit testing, security scanning by executing the below commands
     
 ``    npm prune # remove old packages if any``
 
