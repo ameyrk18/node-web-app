@@ -16,6 +16,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                // change credentials ID as per your needs
                 checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'git-hub', url: repo_url]]])
             }
         }
@@ -42,7 +43,7 @@ pipeline {
         stage('Scan codebase') {
             steps {
                 snykSecurity(
-                        snykTokenId: 'snyk-key',
+                        snykTokenId: 'snyk-key', // change Snyk ID as per your needs
                         snykInstallation: 'SNYK_LATEST',
                         severity: 'low',
                         failOnIssues: 'true',
