@@ -1,6 +1,7 @@
 def repo = "node-web-app"
 def repo_url = "https://github.com/ameyrk18/${repo}.git"
 
+
 pipeline {
     agent any
     environment {
@@ -13,64 +14,38 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '11bf638d-54b0-45d3-829a-476f06d606ff', url: repo_url ]]])
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'git-hub', url: repo_url]]])
             }
         }
-        stage('Unit testing pre-requisites'){
 
-            sh 'npm prune' // remove old packages
-            sh 'npm install' // install packages
-            sh 'npm install -g pm2@latest' // install pm2 to start the node js app
-            sh 'pm2 start server.js' // start application
-        }
 
-        stage('Start unit testing'){
-            sh 'mocha' // run tests
-            if (result != 0) {
-                echo '[FAILURE] Failed to build'
-                currentBuild.result = 'FAILURE'
-                sh "exit ${result}"
+        stage ('Unit testing pre-requisites'){
+            steps{
+                sh 'npm prune' // remove old packages
+                sh 'npm install' // install packages
+                sh 'npm install -g pm2@latest' // install pm2 to start the node js app
+                sh 'npm install -g mocha' // install mocha test suite
+                sh 'pm2 start server.js' // start application
+                sh 'sleep 2'
             }
-            sh 'pm2 stop server'
         }
 
-        stage('Start security audit checks') {
+        stage('Start unit testing') {
             steps {
-                dependencyCheckAnalyzer(
-                        datadir: 'dependency-check-data',
-                        suppressionFile: '',
-                        hintsFile: '',
-                        includeCsvReports: false,
-                        includeHtmlReports: true,
-                        includeJsonReports: true,
-                        isAutoupdateDisabled: false,
-                        outdir: '',
-                        scanpath: '',
-                        skipOnScmChange: false,
-                        skipOnUpstreamChange: false,
-                        zipExtensions: '',
-                        includeVulnReports: true)
-
-                dependencyCheckPublisher(
-                        canComputeNew: false,
-                        defaultEncoding: '',
-                        failedTotalAll: '2', // fail if greater than 3 vulns
-                        failedTotalHigh: '0', // fail if any high vulns
-                        healthy: '',
-                        pattern: '',
-                        unHealthy: '2' //build is unhealthy while there are more than 2 vulns
-                )
-
-                archiveArtifacts(
-                        allowEmptyArchive: true,
-                        artifacts: '**/dependency-check-report.*',
-                        onlyIfSuccessful: true)
+                sh 'mocha' // run tests
+                script {
+                    if (result != 0) {
+                        echo '[FAILURE] Failed to build'
+                        currentBuild.result = 'FAILURE'
+                        sh "exit ${result}"
+                    }
+                }
+                sh 'pm2 stop server'
             }
         }
-    }
 
-        stage('Build & Push') {
-            steps {
+        stage('Build, Push') {
+            steps('Build & Push') {
                 script {
                     def IMAGE_TAG_EXPRESSION = "${BUILD_NUMBER}"
                     docker.withRegistry("https://${IMAGE_REGISTRY}", 'docker-hub-cred') {
@@ -78,8 +53,14 @@ pipeline {
                         image.push("${IMAGE_TAG_EXPRESSION}")
                         image.push("latest")
 
+
                     }
                 }
             }
         }
+
+
     }
+}
+
+
