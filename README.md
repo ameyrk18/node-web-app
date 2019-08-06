@@ -1,18 +1,21 @@
 # node-web-app
 
-
 # Pipeline dependency check & purpose
 
-To run the pipeline on jenkins please make sure you have installed node.js plugin as the pipeline relies npm. If your deploying this pipeline on slaves make sure your slave has mpm, docker installed. 
+Thi is a simple hello world node.js code base. Code base consists hello world application, unit test cases and a jenkins pipeline.  The jenkins pipeline will checkout the code base, do some unit testing pre-requisites,start unit testing, scan the code base for security issues and finally build and push image to docker private hub. The image will be built and published to docker hub only if unit testing and scan the code base for security results are positive. 
 
-This pipeline will do the following
-1. Checkout the code
-2. Unit testing pre-requisite which includes installing packages and starting the aapp
-3. Execute unit tests
-4. Security audit
-5.Build image and push to repository 
+I am using mocha for unit testing and snyk for security scanning.  
 
-# Run unit tests locally
+PS: Read all the comments in the ci/pipeline.gdsl
+
+# Dependences for this pipeline 
+The following needs to be installed 
+1. Docker
+2. npm
+3. snyk (https://wiki.jenkins.io/display/JENKINS/Snyk+Security+Plugin)
+4. Create a snyk account (https://snyk.io/)
+
+# Run unit tests, and security scanning locally
 
 git clone https://github.com/ameyrk18/node-web-app.git
 
@@ -26,11 +29,15 @@ To execute the unit test locally
 
 ``    npm install # install packages``
 
-``   npm install -g pm2@latest # install process manager to start/stop node app``
+``    npm install -g pm2@latest # install process manager to start/stop node app``
 
 ``    pm2 start server.js # start your app``
 
 ``    mocha # run unit tests``
+
+``    snyk auth # authethicate with snyk ``
+
+``    snyk test # execute scanning``
 
 ``    pm2 stop server.js # stop your app``
 
