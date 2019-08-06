@@ -1,3 +1,4 @@
+// Change these variables as per your needs, cane be further fined tuned as per the project needs
 def repo = "node-web-app"
 def repo_url = "https://github.com/ameyrk18/${repo}.git"
 
@@ -5,6 +6,7 @@ def repo_url = "https://github.com/ameyrk18/${repo}.git"
 pipeline {
     agent any
     environment {
+        // Change these variables as per your needs, cane be further fined tuned as per the project needs
         IMAGE_NAME = 'node-web-app'
         IMAGE_NAME_FULL = 'registry.hub.docker.com/ameyrk/node-web-app'
         DOCKERFILE_PATH = './'
@@ -25,7 +27,7 @@ pipeline {
                 sh 'npm install' // install packages
                 sh 'npm install -g pm2@latest' // install pm2 to start the node js app
                 sh 'npm install -g mocha' // install mocha test suite
-                sh 'pm2 start server.js' // start application
+                sh 'pm2 start server.js -f' // start application
                 sh 'sleep 2'
             }
         }
@@ -33,14 +35,19 @@ pipeline {
         stage('Start unit testing') {
             steps {
                 sh 'mocha' // run tests
-                script {
-                    if (result != 0) {
-                        echo '[FAILURE] Failed to build'
-                        currentBuild.result = 'FAILURE'
-                        sh "exit ${result}"
-                    }
-                }
-                sh 'pm2 stop server'
+                sh 'pm2 stop server' // stop app
+            }
+        }
+        // Snyk security code base scanning
+        stage('Scan codebase') {
+            steps {
+                snykSecurity(
+                        snykTokenId: 'snyk-key',
+                        snykInstallation: 'SNYK_LATEST',
+                        severity: 'low',
+                        failOnIssues: 'true',
+                        organisation: 'ameyrk18'
+                )
             }
         }
 
@@ -52,14 +59,10 @@ pipeline {
                         def image = docker.build("${IMAGE_NAME_FULL}", "${DOCKERFILE_PATH}")
                         image.push("${IMAGE_TAG_EXPRESSION}")
                         image.push("latest")
-
-
                     }
                 }
             }
         }
-
-
     }
 }
 
